@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Quản Lý Kho Online</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.9);
+            margin: 20px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .message {
+            margin: 15px 0;
+            display: flex;
+            align-items: flex-start;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            line-height: 1.4;
+        }
+
+        .message.bot .message-content {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-bottom-left-radius: 5px;
+            color: #1565C0;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: rgba(248, 249, 250, 0.9);
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid rgba(0,0,0,0.1);
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.2);
+        }
+
+        .send-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .quick-actions {
+            margin-bottom: 20px;
+        }
+
+        .quick-actions h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 5px 0;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .action-btn:hover {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .stats-panel {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stats-panel h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .warning {
+            color: #ff9800 !important;
+        }
+
+        .danger {
+            color: #f44336 !important;
+        }
+
+        .connection-status {
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #4caf50;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px 20px;
+            background: rgba(108, 117, 125, 0.1);
+            border-radius: 20px;
+            margin: 10px 0;
+            max-width: 70%;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #6c757d;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.3;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-height: 200px;
+            }
+            
+            .main-content {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="connection-status">
+            ✅ Phiên bản dùng thử - Powered by LogiFlow
+        </div>
+        
+        <div class="quick-actions">
+            <h3>🚀 Thao Tác Nhanh</h3>
+            <button class="action-btn" onclick="sendQuickMessage('Kiểm tra tồn kho')">
+                📦 Kiểm tra tồn kho
+            </button>
+            <button class="action-btn" onclick="sendQuickMessage('Cảnh báo hàng sắp hết')">
+                ⚠️ Cảnh báo hàng sắp hết
+            </button>
+            <button class="action-btn" onclick="sendQuickMessage('Báo cáo hôm nay')">
+                📊 Báo cáo hôm nay
+            </button>
+            <button class="action-btn" onclick="sendQuickMessage('Tìm kiếm sản phẩm')">
+                🔍 Tìm kiếm sản phẩm
+            </button>
+            <button class="action-btn" onclick="sendQuickMessage('Hướng dẫn')">
+                📖 Hướng dẫn sử dụng
+            </button>
+        </div>
+        
+        <div class="stats-panel">
+            <h3>📈 Thống Kê Tức Thì</h3>
+            <div class="stat-item">
+                <span>Tổng sản phẩm:</span>
+                <span class="stat-value">5 loại</span>
+            </div>
+            <div class="stat-item">
+                <span>Giá trị kho:</span>
+                <span class="stat-value">782 triệu</span>
+            </div>
+            <div class="stat-item">
+                <span>Thu mua hôm nay:</span>
+                <span class="stat-value">35 tấn</span>
+            </div>
+            <div class="stat-item">
+                <span>Xuất bán hôm nay:</span>
+                <span class="stat-value">28 tấn</span>
+            </div>
+            <div class="stat-item">
+                <span>Cần thu mua:</span>
+                <span class="warning">2 loại</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h1>🤖 Storage Manager AI - LogiFlow</h1>
+                <p>Chatbot Quản Lý Kho Phụ Phẩm Nông Nghiệp</p>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    <div class="message-content">
+                        🌾 <strong>Chào mừng đến với Hệ thống Quản Lý Kho!</strong><br><br>
+                        
+                        Tôi là Storage Manager AI của LogiFlow, chuyên quản lý:<br><br>
+                        
+                        • 🥜 <strong>Vỏ lạc</strong> từ các nhà máy chế biến<br>
+                        • 🌽 <strong>Bẹ ngô</strong> từ nông dân và trang trại<br>
+                        • 🌾 <strong>Bã mía</strong> từ các nhà máy đường<br>
+                        • 🫛 <strong>Đậu tương</strong> từ các vùng trồng<br>
+                        • 🌾 <strong>Rơm rạ</strong> từ nông hộ<br><br>
+                        
+                        <strong>Chúng tôi thu mua từ:</strong> Nông dân, Nhà máy, Trang trại<br>
+                        <strong>Cung cấp cho:</strong> Doanh nghiệp có nhu cầu<br><br>
+                        
+                        <em>Hãy thử các nút bên trái hoặc chat với tôi!</em>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            
+            <div class="chat-input">
+                <div class="input-group">
+                    <input type="text" class="input-field" id="messageInput" 
+                           placeholder="Hỏi về tồn kho, thu mua, xuất bán... VD: 'Kiểm tra vỏ lạc'" 
+                           onkeypress="handleKeyPress(event)">
+                    <button class="send-btn" onclick="sendMessage()">📤 Gửi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dữ liệu kho phụ phẩm nông nghiệp
+        const warehouseData = {
+            products: [
+                { 
+                    ma_san_pham: 'VL001', 
+                    ten_san_pham: 'Vỏ lạc', 
+                    so_luong: 125.5, 
+                    don_vi: 'tấn', 
+                    muc_ton_toi_thieu: 50, 
+                    nha_cung_cap: 'Hợp tác xã Bắc Ninh', 
+                    vi_tri_kho: 'Kho A1',
+                    gia_thu_mua: '3,200,000',
+                    gia_ban: '4,100,000'
+                },
+                { 
+                    ma_san_pham: 'BN002', 
+                    ten_san_pham: 'Bẹ ngô', 
+                    so_luong: 89.2, 
+                    don_vi: 'tấn', 
+                    muc_ton_toi_thieu: 100, 
+                    nha_cung_cap: 'Trang trại Phú Thọ', 
+                    vi_tri_kho: 'Kho B2',
+                    gia_thu_mua: '1,800,000',
+                    gia_ban: '2,300,000'
+                },
+                { 
+                    ma_san_pham: 'BM003', 
+                    ten_san_pham: 'Bã mía', 
+                    so_luong: 156.8, 
+                    don_vi: 'tấn', 
+                    muc_ton_toi_thieu: 80, 
+                    nha_cung_cap: 'Nhà máy đường Thái Nguyên', 
+                    vi_tri_kho: 'Kho C1',
+                    gia_thu_mua: '2,500,000',
+                    gia_ban: '3,200,000'
+                },
+                { 
+                    ma_san_pham: 'DT004', 
+                    ten_san_pham: 'Đậu tương', 
+                    so_luong: 45.3, 
+                    don_vi: 'tấn', 
+                    muc_ton_toi_thieu: 60, 
+                    nha_cung_cap: 'Nông dân Điện Biên', 
+                    vi_tri_kho: 'Kho D1',
+                    gia_thu_mua: '15,500,000',
+                    gia_ban: '18,200,000'
+                },
+                { 
+                    ma_san_pham: 'RR005', 
+                    ten_san_pham: 'Rơm rạ', 
+                    so_luong: 98.7, 
+                    don_vi: 'tấn', 
+                    muc_ton_toi_thieu: 120, 
+                    nha_cung_cap: 'Hợp tác xã Bắc Ninh', 
+                    vi_tri_kho: 'Kho E1',
+                    gia_thu_mua: '900,000',
+                    gia_ban: '1,200,000'
+                }
+            ]
+        };
+
+        function addMessage(content, isUser = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            document.getElementById('typingIndicator').style.display = 'block';
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            document.getElementById('typingIndicator').style.display = 'none';
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
+        }
+
+        function calculateTotalValue() {
+            return warehouseData.products.reduce((total, product) => {
+                const price = parseInt(product.gia_ban.replace(/,/g, ''));
+                return total + (product.so_luong * price);
+            }, 0);
+        }
+
+        function processMessage(message) {
+            showTypingIndicator();
+            
+            setTimeout(() => {
+                hideTypingIndicator();
+                
+                const lowerMessage = message.toLowerCase();
+                let response = '';
+
+                if (lowerMessage.includes('tồn kho') || lowerMessage.includes('kiểm tra')) {
+                    response = '📦 <strong>Tồn kho phụ phẩm nông nghiệp:</strong><br><br>';
+                    warehouseData.products.forEach(product => {
+                        const status = product.so_luong <= product.muc_ton_toi_thieu ? 
+                            '<span class="warning">⚠️ Cần thu mua</span>' : 
+                            '<span class="stat-value">✅ Đủ hàng</span>';
+                        response += `• <strong>${product.ten_san_pham}</strong>: ${product.so_luong} ${product.don_vi} - ${status}<br>`;
+                        response += `&nbsp;&nbsp;📍 ${product.vi_tri_kho} | 🏪 ${product.nha_cung_cap}<br>`;
+                        response += `&nbsp;&nbsp;💰 Giá bán: ${formatCurrency(parseInt(product.gia_ban.replace(/,/g, '')))}/tấn<br><br>`;
+                    });
+                }
+                else if (lowerMessage.includes('cảnh báo') || lowerMessage.includes('sắp hết') || lowerMessage.includes('cần thu')) {
+                    const lowStock = warehouseData.products.filter(p => p.so_luong <= p.muc_ton_toi_thieu);
+                    response = '⚠️ <strong>Cần thu mua gấp:</strong><br><br>';
+                    
+                    if (lowStock.length > 0) {
+                        lowStock.forEach(product => {
+                            response += `• <span class="warning">${product.ten_san_pham}</span>: ${product.so_luong}/${product.muc_ton_toi_thieu} ${product.don_vi}<br>`;
+                            response += `&nbsp;&nbsp;📍 ${product.vi_tri_kho} | 🏪 ${product.nha_cung_cap}<br>`;
+                            response += `&nbsp;&nbsp;💰 Thu mua: ${formatCurrency(parseInt(product.gia_thu_mua.replace(/,/g, '')))}/tấn<br><br>`;
+                        });
+                        response += `🔔 <strong>Khuyến nghị:</strong> Liên hệ nhà cung cấp để thu mua thêm!`;
+                    } else {
+                        response = '✅ <strong>Tuyệt!</strong> Tất cả sản phẩm đều đủ hàng!';
+                    }
+                }
+                else if (lowerMessage.includes('báo cáo')) {
+                    const totalValue = calculateTotalValue();
+                    const totalWeight = warehouseData.products.reduce((sum, p) => sum + p.so_luong, 0);
+                    
+                    response = `📊 <strong>Báo cáo tổng quan hôm nay:</strong><br><br>
+                    • Tổng sản phẩm: <strong>5 loại phụ phẩm</strong><br>
+                    • Tổng trọng lượng: <strong>${totalWeight.toFixed(1)} tấn</strong><br>
+                    • Giá trị kho: <strong>${formatCurrency(totalValue)}</strong><br>
+                    • Thu mua hôm nay: <strong>35 tấn</strong><br>
+                    • Xuất bán hôm nay: <strong>28 tấn</strong><br>
+                    • Sản phẩm cần thu mua: <strong>2 loại</strong><br>
+                    • Doanh thu dự kiến: <strong>2.1 tỷ VNĐ</strong><br><br>
+                    📈 <strong>Top sản phẩm có giá trị cao:</strong> Đậu tương, Bã mía, Vỏ lạc`;
+                }
+                else if (lowerMessage.includes('tìm')) {
+                    const searchTerm = lowerMessage.replace(/tìm|tìm kiếm/g, '').trim();
+                    if (searchTerm) {
+                        const results = warehouseData.products.filter(p => 
+                            p.ten_san_pham.toLowerCase().includes(searchTerm) ||
+                            p.ma_san_pham.toLowerCase().includes(searchTerm) ||
+                            p.nha_cung_cap.toLowerCase().includes(searchTerm)
+                        );
+                        
+                        if (results.length > 0) {
+                            response = `🔍 <strong>Tìm thấy "${searchTerm}":</strong><br><br>`;
+                            results.forEach(product => {
+                                response += `• <strong>${product.ten_san_pham}</strong> (${product.ma_san_pham})<br>`;
+                                response += `&nbsp;&nbsp;Tồn kho: ${product.so_luong} ${product.don_vi} | ${product.vi_tri_kho}<br>`;
+                                response += `&nbsp;&nbsp;Nhà cung cấp: ${product.nha_cung_cap}<br>`;
+                                response += `&nbsp;&nbsp;Giá: ${formatCurrency(parseInt(product.gia_ban.replace(/,/g, '')))}/tấn<br><br>`;
+                            });
+                        } else {
+                            response = `🔍 Không tìm thấy "${searchTerm}".<br>Thử tìm: "vỏ lạc", "bẹ ngô", "bã mía", "đậu tương", "rơm rạ"`;
+                        }
+                    } else {
+                        response = `🔍 <strong>Tìm kiếm sản phẩm:</strong><br>VD: "Tìm vỏ lạc" hoặc "Tìm Bắc Ninh"`;
+                    }
+                }
+                else if (lowerMessage.includes('hướng dẫn') || lowerMessage.includes('help')) {
+                    response = `📖 <strong>Hướng dẫn sử dụng LogiFlow Storage Manager:</strong><br><br>
+                    <strong>✅ Các lệnh có thể sử dụng:</strong><br>
+                    • "Kiểm tra tồn kho" - Xem toàn bộ phụ phẩm<br>
+                    • "Cảnh báo cần thu mua" - Kiểm tra hàng sắp hết<br>
+                    • "Báo cáo hôm nay" - Thống kê tổng quan<br>
+                    • "Tìm [tên sản phẩm]" - Tìm kiếm cụ thể<br><br>
+                    
+                    <strong>🌾 Sản phẩm chúng tôi quản lý:</strong><br>
+                    • Vỏ lạc từ nhà máy chế biến<br>
+                    • Bẹ ngô từ trang trại<br>
+                    • Bã mía từ nhà máy đường<br>
+                    • Đậu tương từ nông dân<br>
+                    • Rơm rạ từ hợp tác xã<br><br>
+                    
+                    <strong>🎯 Mục tiêu:</strong> Thu mua từ nông dân, bán cho doanh nghiệp`;
+                }
+                else if (lowerMessage.includes('giá') || lowerMessage.includes('thu mua') || lowerMessage.includes('bán')) {
+                    response = `💰 <strong>Bảng giá phụ phẩm nông nghiệp:</strong><br><br>`;
+                    warehouseData.products.forEach(product => {
+                        response += `• <strong>${product.ten_san_pham}</strong><br>`;
+                        response += `&nbsp;&nbsp;Thu mua: ${formatCurrency(parseInt(product.gia_thu_mua.replace(/,/g, '')))}/tấn<br>`;
+                        response += `&nbsp;&nbsp;Bán ra: ${formatCurrency(parseInt(product.gia_ban.replace(/,/g, '')))}/tấn<br>`;
+                        response += `&nbsp;&nbsp;Tồn kho: ${product.so_luong} tấn<br><br>`;
+                    });
+                    response += `📞 <strong>Liên hệ:</strong> Để thỏa thuận giá cả và số lượng lớn`;
+                }
+                else {
+                    response = `🤖 <strong>Xin chào! Tôi là LogiFlow Storage Manager AI</strong><br><br>
+                    Tôi quản lý kho phụ phẩm nông nghiệp. Hãy thử:<br><br>
+                    • "Kiểm tra tồn kho"<br>
+                    • "Cảnh báo cần thu mua"<br>
+                    • "Báo cáo hôm nay"<br>
+                    • "Tìm vỏ lạc"<br>
+                    • "Giá thu mua"<br>
+                    • "Hướng dẫn"<br><br>
+                    <em>Hoặc dùng các nút bên trái!</em> 🚀`;
+                }
+
+                addMessage(response);
+            }, 1000 + Math.random() * 1000);
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (message) {
+                addMessage(message, true);
+                messageInput.value = '';
+                processMessage(message);
+            }
+        }
+
+        function sendQuickMessage(message) {
+            addMessage(message, true);
+            processMessage(message);
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Khởi tạo
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('messageInput').focus();
+        });
+    </script>
+</body>
+</html>
+
